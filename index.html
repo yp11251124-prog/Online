@@ -58,7 +58,7 @@ border:1px solid #ccc;
 border-radius:8px;
 }
 
-/* 唯讀欄位稍微變灰 */
+/* 唯讀欄位外觀稍微變灰 */
 input[readonly] {
 background-color: #e9ecef;
 cursor: not-allowed;
@@ -219,7 +219,7 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, si
 import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ========================================================
-// 1. 設定你的金鑰區域 (Firebase & EmailJS)
+// 1. 設定你的金鑰區域 (已更新 EmailJS 參數)
 // ========================================================
 const firebaseConfig = {
   apiKey: "AIzaSyD74VC9v4BFXG-tIjd-e3THLxf0VVosuOg",
@@ -231,10 +231,10 @@ const firebaseConfig = {
   measurementId: "G-DG50QFEPC4"
 };
 
-// 請在此處填入您的 EmailJS 金鑰
-const EMAILJS_PUBLIC_KEY = "YOUR_EMAILJS_PUBLIC_KEY"; 
-const EMAILJS_SERVICE_ID = "YOUR_EMAILJS_SERVICE_ID";
-const EMAILJS_TEMPLATE_ID = "YOUR_EMAILJS_TEMPLATE_ID";
+// 填入您提供的 EmailJS 金鑰
+const EMAILJS_PUBLIC_KEY = "etPJq_vcB61L6R-xa"; 
+const EMAILJS_SERVICE_ID = "service_2svcgyb";
+const EMAILJS_TEMPLATE_ID = "template_gyupjdo";
 
 // 初始化 Firebase
 const app = initializeApp(firebaseConfig);
@@ -242,9 +242,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // 初始化 EmailJS
-if(EMAILJS_PUBLIC_KEY !== "YOUR_EMAILJS_PUBLIC_KEY") {
-    emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
-}
+emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 
 // ========================================================
 // 2. 商業邏輯與自動化 UI 函數
@@ -278,9 +276,9 @@ window.signup = async function(){
 // 登入功能
 window.login = async function(){
     const email = document.getElementById("loginEmail").value;
-    const password = document.getElementById("signupPassword" ? document.getElementById("loginPassword").value : ""); // 安全檢查
+    const password = document.getElementById("loginPassword").value;
     try{
-        await signInWithEmailAndPassword(auth, email, document.getElementById("loginPassword").value);
+        await signInWithEmailAndPassword(auth, email, password);
         alert("Login Success");
     }catch(error){
         alert(error.message);
@@ -345,7 +343,7 @@ window.placeOrder = async function(){
     try{
         const orderDateNow = Date.now();
         
-        // 1. 存入 Firestore
+        // 1. 存入 Firestore 資料庫
         await addDoc(collection(db,"orders"),{
             userId: user.uid,
             userEmail: user.email,
@@ -359,32 +357,25 @@ window.placeOrder = async function(){
 
         alert("Order Saved to Database!");
 
-        // 2. 觸發 EmailJS 發送郵件
-        if (EMAILJS_PUBLIC_KEY !== "YOUR_EMAILJS_PUBLIC_KEY") {
-            
-            // 準備傳送給 EmailJS 模板的參數
-            const templateParams = {
-                customerName: customerName,
-                productName: productName,
-                quantity: quantity,
-                totalPrice: price * quantity, // 計算總金額
-                message: message || "無",
-                orderDate: new Date(orderDateNow).toLocaleString(),
-                userEmail: user.email // 收件人填登入者的 Email 或是你自己的後台通知信箱
-            };
+        // 2. 準備傳送給 EmailJS 模板的變數參數
+        const templateParams = {
+            customerName: customerName,
+            productName: productName,
+            quantity: quantity,
+            totalPrice: price * quantity, // 計算總金額
+            message: message || "無",
+            orderDate: new Date(orderDateNow).toLocaleString(),
+            userEmail: user.email // 可用於後台得知是哪位會員下單，或在 EmailJS 後台將此欄位設為收件人
+        };
 
-            // 如果你想把信直接寄給目前登入的顧客，可以在這裡將 template 內建的 To Email 綁定此變數，
-            // 或者在後台設定固定寄給店長。
-            await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
-            alert("Confirmation Email Sent successfully!");
-        } else {
-            console.log("EmailJS 尚未配置金鑰，跳過寄信步驟。");
-        }
+        // 3. 執行發送郵件
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+        alert("Confirmation Email Sent successfully!");
 
         // 重新載入訂單清單
         loadOrders(user);
 
-        // 清空表單部分欄位
+        // 清空表單欄位
         document.getElementById("customerName").value = "";
         document.getElementById("message").value = "";
         document.getElementById("quantity").value = "1";
