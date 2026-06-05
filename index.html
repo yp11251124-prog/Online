@@ -144,21 +144,21 @@ display:none;
 <div class="products">
 
 <div class="product">
-<img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600" alt="">
-<h3>Sports Shoes</h3>
-<p class="price">$80</p>
+<img src="https://image.pxgo.com.tw/pic/2025/10/13/0ebc40a0ce0e474a9f60cb4ee5c4682c.jpg" alt="紫菜蘇打餅">
+<h3>紫菜蘇打餅</h3>
+<p class="price">NT$ 50</p>
 </div>
 
 <div class="product">
-<img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600" alt="">
-<h3>Smart Watch</h3>
-<p class="price">$120</p>
+<img src="https://image.pxgo.com.tw/pic/2026/06/02/cc10bb87fc284f6ebfd42804b0e535ee.jpg" alt="香蕉（產銷履歷）">
+<h3>香蕉（產銷履歷）</h3>
+<p class="price">NT$ 30</p>
 </div>
 
 <div class="product">
-<img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600" alt="">
-<h3>Smart Phone</h3>
-<p class="price">$500</p>
+<img src="https://image.pxgo.com.tw/pic/2026/06/05/5a118a787983444dab91eec294f05a34.jpg" alt="舒跑飲料">
+<h3>舒跑飲料</h3>
+<p class="price">NT$ 25</p>
 </div>
 
 </div>
@@ -186,16 +186,16 @@ display:none;
 
 <label>Select Product:</label>
 <select id="productName" onchange="updatePrice()">
-<option value="Sports Shoes">Sports Shoes ($80)</option>
-<option value="Smart Watch">Smart Watch ($120)</option>
-<option value="Smart Phone">Smart Phone ($500)</option>
+<option value="紫菜蘇打餅">紫菜蘇打餅 (NT$ 50)</option>
+<option value="香蕉（產銷履歷）">香蕉（產銷履歷） (NT$ 30)</option>
+<option value="舒跑飲料">舒跑飲料 (NT$ 25)</option>
 </select>
 
 <label>Quantity:</label>
 <input type="number" id="quantity" value="1" min="1">
 
-<label>Unit Price (USD):</label>
-<input type="number" id="price" value="80" readonly>
+<label>Unit Price (TWD):</label>
+<input type="number" id="price" value="50" readonly>
 
 <label>Message:</label>
 <textarea id="message" placeholder="Leave a message..."></textarea>
@@ -219,7 +219,7 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, si
 import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ========================================================
-// 1. 設定你的金鑰區域 (已更新 EmailJS 參數)
+// 1. 設定你的金鑰區域
 // ========================================================
 const firebaseConfig = {
   apiKey: "AIzaSyD74VC9v4BFXG-tIjd-e3THLxf0VVosuOg",
@@ -231,7 +231,6 @@ const firebaseConfig = {
   measurementId: "G-DG50QFEPC4"
 };
 
-// 填入您提供的 EmailJS 金鑰
 const EMAILJS_PUBLIC_KEY = "etPJq_vcB61L6R-xa"; 
 const EMAILJS_SERVICE_ID = "service_2svcgyb";
 const EMAILJS_TEMPLATE_ID = "template_gyupjdo";
@@ -248,11 +247,11 @@ emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 // 2. 商業邏輯與自動化 UI 函數
 // ========================================================
 
-// 商品價格對照表
+// 商品價格對照表 (已更新為台幣金額)
 const priceList = {
-    "Sports Shoes": 80,
-    "Smart Watch": 120,
-    "Smart Phone": 500
+    "紫菜蘇打餅": 50,
+    "香蕉（產銷履歷）": 30,
+    "舒跑飲料": 25
 };
 
 // 切換下拉選單時自動更換價格
@@ -309,7 +308,7 @@ async function loadOrders(user){
                 <b>${data.productName}</b><br>
                 Customer: ${data.customerName}<br>
                 Qty: ${data.quantity}<br>
-                Price: $${data.price} (Total: $${data.price * data.quantity})<br>
+                Price: NT$ ${data.price} (Total: NT$ ${data.price * data.quantity})<br>
                 Message: ${data.message || 'None'}<br>
                 Date: ${new Date(data.orderDate).toLocaleString()}
                 </div>
@@ -365,7 +364,7 @@ window.placeOrder = async function(){
             totalPrice: price * quantity, // 計算總金額
             message: message || "無",
             orderDate: new Date(orderDateNow).toLocaleString(),
-            userEmail: user.email // 可用於後台得知是哪位會員下單，或在 EmailJS 後台將此欄位設為收件人
+            userEmail: user.email
         };
 
         // 3. 執行發送郵件
