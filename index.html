@@ -1,214 +1,405 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firebase Online Store</title>
+<title>鮮購美商超 - Firebase & EmailJS 旗艦版</title>
 
 <style>
+:root {
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --accent: #f59e0b;
+    --success: #10b981;
+    --bg-main: #f8fafc;
+    --text-dark: #1e293b;
+    --text-muted: #64748b;
+    --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+}
+
 *{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial,sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
 }
 
 body{
-background:#f5f7fb;
-color:#333;
+    background: var(--bg-main);
+    color: var(--text-dark);
+    line-height: 1.6;
 }
 
-header{
-background:linear-gradient(135deg,#4f46e5,#7c3aed);
-color:white;
-padding:20px;
-text-align:center;
+/* 時尚橫幅 Banner */
+.hero-banner {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.9), rgba(124, 58, 237, 0.85)), 
+                url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    padding: 60px 20px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
 
-header h1{
-font-size:32px;
+.hero-banner h1 {
+    font-size: 38px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-.container{
-width:90%;
-max-width:1200px;
-margin:auto;
-padding:20px;
+.hero-banner p {
+    font-size: 16px;
+    opacity: 0.9;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
-.card{
-background:white;
-padding:20px;
-border-radius:12px;
-box-shadow:0 4px 12px rgba(0,0,0,0.1);
-margin-bottom:20px;
+/* 優惠跑馬燈 */
+.promo-bar {
+    background: var(--accent);
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    padding: 6px 0;
 }
 
-h2{
-margin-bottom:15px;
-color:#4f46e5;
+.container {
+    width: 92%;
+    max-width: 1240px;
+    margin: 30px auto;
 }
 
-input, textarea, select{
-width:100%;
-padding:10px;
-margin-top:8px;
-margin-bottom:12px;
-border:1px solid #ccc;
-border-radius:8px;
+/* 通用精緻卡片 */
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 25px;
+    border: 1px solid rgba(241, 245, 249, 0.8);
+    transition: transform 0.3s ease;
 }
 
-/* 唯讀欄位外觀稍微變灰 */
+h2 {
+    margin-bottom: 20px;
+    color: var(--text-dark);
+    font-size: 22px;
+    position: relative;
+    padding-left: 12px;
+}
+
+h2::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 4px;
+    height: 22px;
+    width: 4px;
+    background: var(--primary);
+    border-radius: 4px;
+}
+
+/* 會員狀態與登出區 */
+.user-status-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 15px 25px;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #cbd5e1;
+}
+
+.status-dot.active {
+    background: var(--success);
+    box-shadow: 0 0 8px var(--success);
+}
+
+/* 表單元件美化 */
+label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: block;
+    margin-top: 10px;
+}
+
+input, textarea, select {
+    width: 100%;
+    padding: 12px 16px;
+    margin-top: 6px;
+    margin-bottom: 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 15px;
+    background-color: #f8fafc;
+    transition: all 0.3s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
 input[readonly] {
-background-color: #e9ecef;
-cursor: not-allowed;
+    background-color: #e2e8f0;
+    color: var(--text-muted);
+    cursor: not-allowed;
 }
 
-button{
-padding:10px 16px;
-border:none;
-border-radius:8px;
-background:#4f46e5;
-color:white;
-cursor:pointer;
-font-size:15px;
+/* 按鈕美化 */
+button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    background: var(--primary);
+    color: white;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
 }
 
-button:hover{
-background:#4338ca;
+button:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px -1px rgba(79, 70, 229, 0.3);
 }
 
-.products{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-gap:20px;
+.btn-secondary {
+    background: #64748b;
+    box-shadow: none;
+}
+.btn-secondary:hover {
+    background: #475569;
+    box-shadow: none;
 }
 
-.product{
-background:white;
-padding:15px;
-border-radius:12px;
-box-shadow:0 3px 10px rgba(0,0,0,0.1);
-text-align:center;
+/* 商品展示區域網格 */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
 }
 
-.product img{
-width:100%;
-height:180px;
-object-fit:cover;
-border-radius:10px;
+.product-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    border: 1px solid #edf2f7;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.price{
-font-size:20px;
-font-weight:bold;
-color:#16a34a;
-margin-top:10px;
+.product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.08);
 }
 
-#userInfo{
-font-weight:bold;
-margin-bottom:10px;
-color:#16a34a;
+.product-img-wrapper {
+    width: 100%;
+    height: 220px;
+    overflow: hidden;
+    position: relative;
+    background: #f1f5f9;
 }
 
-.order-item{
-padding:10px;
-border-bottom:1px solid #ddd;
+.product-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
 }
 
-.hidden{
-display:none;
+.product-card:hover img {
+    transform: scale(1.08);
+}
+
+.product-info {
+    padding: 20px;
+}
+
+.product-info h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.product-card .price {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--success);
+}
+
+/* 雙欄佈局區（下單與歷史清單） */
+.shop-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 25px;
+}
+
+@media (min-content-width: 768px) or (min-width: 850px) {
+    .shop-layout {
+        grid-template-columns: 1.1fr 0.9fr;
+    }
+}
+
+.auth-box {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+/* 訂單明細項目美化 */
+.order-item {
+    padding: 16px;
+    border-radius: 10px;
+    background: #f8fafc;
+    border-left: 4px solid var(--primary);
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.order-item b {
+    font-size: 16px;
+    color: var(--text-dark);
+}
+
+.hidden {
+    display: none !important;
 }
 </style>
 </head>
 <body>
 
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+<div class="promo-bar">🎉 限時好康：全館滿額即享全台精緻配送！安心產銷履歷看得見</div>
   
-<header>
-<h1>🛒 Firebase Online Store</h1>
-<p>Simple Full Stack Store with Firebase & EmailJS</p>
+<header class="hero-banner">
+    <h1>🛒 鮮購美精選商超</h1>
+    <p>提供最安心的產銷履歷、最道地的在地風味，結合 Firebase 安全技術與智慧化 Email 訂單通知系統</p>
 </header>
 
 <div class="container">
 
-<div class="card">
-<div id="userInfo">Not Logged In</div>
-<button id="logoutBtn" class="hidden">Logout</button>
-</div>
+    <div class="card user-status-card">
+        <div class="status-badge">
+            <span id="statusDot" class="status-dot"></span>
+            <span id="userInfo">載入會員狀態中...</span>
+        </div>
+        <button id="logoutBtn" class="btn-secondary hidden">會員登出</button>
+    </div>
 
-<div class="card">
-<h2>Products</h2>
+    <div class="card">
+        <h2>嚴選寶島熱銷商品</h2>
+        <div class="products-grid">
+            <div class="product-card">
+                <div class="product-img-wrapper">
+                    <img src="https://image.pxgo.com.tw/pic/2025/10/13/0ebc40a0ce0e474a9f60cb4ee5c4682c.jpg" alt="紫菜蘇打餅">
+                </div>
+                <div class="product-info">
+                    <h3>紫菜蘇打餅</h3>
+                    <p class="price">NT$ 50</p>
+                </div>
+            </div>
+            <div class="product-card">
+                <div class="product-img-wrapper">
+                    <img src="https://image.pxgo.com.tw/pic/2026/06/02/cc10bb87fc284f6ebfd42804b0e535ee.jpg" alt="香蕉">
+                </div>
+                <div class="product-info">
+                    <h3>香蕉（產銷履歷）</h3>
+                    <p class="price">NT$ 30</p>
+                </div>
+            </div>
+            <div class="product-card">
+                <div class="product-img-wrapper">
+                    <img src="https://image.pxgo.com.tw/pic/2026/06/05/5a118a787983444dab91eec294f05a34.jpg" alt="舒跑">
+                </div>
+                <div class="product-info">
+                    <h3>舒跑飲料</h3>
+                    <p class="price">NT$ 25</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<div class="products">
+    <div id="authSection" class="auth-box">
+        <div class="card">
+            <h2>快速註冊帳戶</h2>
+            <label>新會員帳號 (Email)</label>
+            <input type="email" id="signupEmail" placeholder="example@gmail.com">
+            <label>設定密碼</label>
+            <input type="password" id="signupPassword" placeholder="至少 6 位數密碼">
+            <button onclick="signup()" style="width: 100%;">建立新帳號</button>
+        </div>
 
-<div class="product">
-<img src="https://image.pxgo.com.tw/pic/2025/10/13/0ebc40a0ce0e474a9f60cb4ee5c4682c.jpg" alt="紫菜蘇打餅">
-<h3>紫菜蘇打餅</h3>
-<p class="price">NT$ 50</p>
-</div>
+        <div class="card">
+            <h2>會員快捷登入</h2>
+            <label>電子信箱</label>
+            <input type="email" id="loginEmail" placeholder="example@gmail.com">
+            <label>輸入密碼</label>
+            <input type="password" id="loginPassword" placeholder="請輸入密碼">
+            <button onclick="login()" style="width: 100%;">立即登入</button>
+        </div>
+    </div>
 
-<div class="product">
-<img src="https://image.pxgo.com.tw/pic/2026/06/02/cc10bb87fc284f6ebfd42804b0e535ee.jpg" alt="香蕉（產銷履歷）">
-<h3>香蕉（產銷履歷）</h3>
-<p class="price">NT$ 30</p>
-</div>
+    <div class="shop-layout">
+        
+        <div class="card">
+            <h2>填寫快速訂購單</h2>
+            
+            <label>收件人姓名：</label>
+            <input type="text" id="customerName" placeholder="請輸入您的真實姓名" required>
 
-<div class="product">
-<img src="https://image.pxgo.com.tw/pic/2026/06/05/5a118a787983444dab91eec294f05a34.jpg" alt="舒跑飲料">
-<h3>舒跑飲料</h3>
-<p class="price">NT$ 25</p>
-</div>
+            <label>欲購精選商品：</label>
+            <select id="productName" onchange="updatePrice()">
+                <option value="紫菜蘇打餅">紫菜蘇打餅 (NT$ 50)</option>
+                <option value="香蕉（產銷履歷）">香蕉（產銷履歷） (NT$ 30)</option>
+                <option value="舒跑飲料">舒跑飲料 (NT$ 25)</option>
+            </select>
 
-</div>
-</div>
+            <label>訂購數量：</label>
+            <input type="number" id="quantity" value="1" min="1">
 
-<div class="card">
-<h2>Signup</h2>
-<input type="email" id="signupEmail" placeholder="Email">
-<input type="password" id="signupPassword" placeholder="Password">
-<button onclick="signup()">Create Account</button>
-</div>
+            <label>系統自動產出單價 (TWD)：</label>
+            <input type="number" id="price" value="50" readonly>
 
-<div class="card">
-<h2>Login</h2>
-<input type="email" id="loginEmail" placeholder="Email">
-<input type="password" id="loginPassword" placeholder="Password">
-<button onclick="login()">Login</button>
-</div>
+            <label>給店家的備註訊息：</label>
+            <textarea id="message" rows="3" placeholder="有特殊運送規格或時間要求請填寫在此..."></textarea>
 
-<div class="card">
-<h2>Place Order</h2>
+            <button onclick="placeOrder()" style="width: 100%; padding: 15px; font-size: 16px;">送出並成立訂單</button>
+        </div>
 
-<label>Customer Name:</label>
-<input type="text" id="customerName" placeholder="Your Name" required>
+        <div class="card" style="height: max-content;">
+            <h2>專屬歷史訂單紀錄</h2>
+            <div id="ordersList">
+                請先登入會員帳號，即可同步追蹤您在此處成立的個人歷程訂單。
+            </div>
+        </div>
 
-<label>Select Product:</label>
-<select id="productName" onchange="updatePrice()">
-<option value="紫菜蘇打餅">紫菜蘇打餅 (NT$ 50)</option>
-<option value="香蕉（產銷履歷）">香蕉（產銷履歷） (NT$ 30)</option>
-<option value="舒跑飲料">舒跑飲料 (NT$ 25)</option>
-</select>
-
-<label>Quantity:</label>
-<input type="number" id="quantity" value="1" min="1">
-
-<label>Unit Price (TWD):</label>
-<input type="number" id="price" value="50" readonly>
-
-<label>Message:</label>
-<textarea id="message" placeholder="Leave a message..."></textarea>
-
-<button onclick="placeOrder()">Submit Order</button>
-</div>
-
-<div class="card">
-<h2>My Order History</h2>
-<div id="ordersList">
-Login to view your orders.
-</div>
-</div>
+    </div>
 
 </div>
 
@@ -219,7 +410,7 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, si
 import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ========================================================
-// 1. 設定你的金鑰區域
+// 設定金鑰區域 (已更新引數)
 // ========================================================
 const firebaseConfig = {
   apiKey: "AIzaSyD74VC9v4BFXG-tIjd-e3THLxf0VVosuOg",
@@ -244,60 +435,57 @@ const db = getFirestore(app);
 emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 
 // ========================================================
-// 2. 商業邏輯與自動化 UI 函數
+// 商業邏輯函數
 // ========================================================
 
-// 商品價格對照表 (已更新為台幣金額)
 const priceList = {
     "紫菜蘇打餅": 50,
     "香蕉（產銷履歷）": 30,
     "舒跑飲料": 25
 };
 
-// 切換下拉選單時自動更換價格
 window.updatePrice = function() {
     const product = document.getElementById("productName").value;
     document.getElementById("price").value = priceList[product];
 }
 
-// 註冊功能
 window.signup = async function(){
-    const email = document.getElementById("signupEmail").value;
+    const email = document.getElementById("signupEmail").value.trim();
     const password = document.getElementById("signupPassword").value;
+    if(!email || !password) { alert("請完整填寫信箱與密碼！"); return; }
     try{
         await createUserWithEmailAndPassword(auth, email, password);
-        alert("Signup Success");
+        alert("🎉 帳號建立成功！已自動為您登入");
     }catch(error){
-        alert(error.message);
+        alert("註冊失敗: " + error.message);
     }
 }
 
-// 登入功能
 window.login = async function(){
-    const email = document.getElementById("loginEmail").value;
+    const email = document.getElementById("loginEmail").value.trim();
     const password = document.getElementById("loginPassword").value;
+    if(!email || !password) { alert("請輸入信箱與密碼！"); return; }
     try{
         await signInWithEmailAndPassword(auth, email, password);
-        alert("Login Success");
+        alert("👋 歡迎回來，登入成功！");
     }catch(error){
-        alert(error.message);
+        alert("登入失敗: " + error.message);
     }
 }
 
-// 登出按鈕
 document.getElementById("logoutBtn").addEventListener("click", async()=>{
     await signOut(auth);
+    alert("已成功登出會員。");
 });
 
-// 載入歷史訂單
 async function loadOrders(user){
     const list = document.getElementById("ordersList");
-    list.innerHTML = "Loading...";
+    list.innerHTML = "<div style='color: var(--text-muted);'>正在同步雲端資料庫訂單...</div>";
     try{
         const q = query(collection(db,"orders"), where("userId","==",user.uid));
         const snapshot = await getDocs(q);
         if(snapshot.empty){
-            list.innerHTML = "No Orders Found";
+            list.innerHTML = "<div style='color: var(--text-muted); padding: 10px 0;'>目前尚無任何訂購歷史紀錄。</div>";
             return;
         }
         let html = "";
@@ -305,26 +493,25 @@ async function loadOrders(user){
             const data = doc.data();
             html += `
                 <div class="order-item">
-                <b>${data.productName}</b><br>
-                Customer: ${data.customerName}<br>
-                Qty: ${data.quantity}<br>
-                Price: NT$ ${data.price} (Total: NT$ ${data.price * data.quantity})<br>
-                Message: ${data.message || 'None'}<br>
-                Date: ${new Date(data.orderDate).toLocaleString()}
+                <b>📦 ${data.productName}</b><br>
+                <span style="color:var(--text-muted);">訂購人：</span>${data.customerName}<br>
+                <span style="color:var(--text-muted);">數量：</span>${data.quantity} 包/入<br>
+                <span style="color:var(--text-muted);">小計金：</span><span style="color:var(--success); font-weight:bold;">NT$ ${data.price * data.quantity}</span><br>
+                <span style="color:var(--text-muted);">備註：</span>${data.message || '無'}<br>
+                <span style="color:var(--text-muted); font-size:12px;">時間：${new Date(data.orderDate).toLocaleString()}</span>
                 </div>
             `;
         });
         list.innerHTML = html;
     }catch(error){
-        list.innerHTML = error.message;
+        list.innerHTML = "<span style='color:red;'>" + error.message + "</span>";
     }
 }
 
-// 送出訂單與發送 EmailJS 信件
 window.placeOrder = async function(){
     const user = auth.currentUser;
     if(!user){
-        alert("Please login first.");
+        alert("🔒 請先前往上方登入或註冊會員，方能送出訂單！");
         return;
     }
 
@@ -332,17 +519,21 @@ window.placeOrder = async function(){
     const productName = document.getElementById("productName").value;
     const quantity = parseInt(document.getElementById("quantity").value);
     const price = Number(document.getElementById("price").value);
-    const message = document.getElementById("message").value;
+    const message = document.getElementById("message").value.trim();
 
     if(!customerName) {
-        alert("Please enter Customer Name.");
+        alert("⚠️ 請填寫收件人姓名！");
+        return;
+    }
+    if(!quantity || quantity < 1) {
+        alert("⚠️ 訂購數量不可小於 1！");
         return;
     }
 
     try{
         const orderDateNow = Date.now();
         
-        // 1. 存入 Firestore 資料庫
+        // 1. 寫入雲端 Firestore
         await addDoc(collection(db,"orders"),{
             userId: user.uid,
             userEmail: user.email,
@@ -354,53 +545,54 @@ window.placeOrder = async function(){
             orderDate: orderDateNow
         });
 
-        alert("Order Saved to Database!");
-
-        // 2. 準備傳送給 EmailJS 模板的變數參數
+        // 2. 發送 EmailJS
         const templateParams = {
             customerName: customerName,
             productName: productName,
             quantity: quantity,
-            totalPrice: price * quantity, // 計算總金額
+            totalPrice: price * quantity,
             message: message || "無",
             orderDate: new Date(orderDateNow).toLocaleString(),
             userEmail: user.email
         };
 
-        // 3. 執行發送郵件
         await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
-        alert("Confirmation Email Sent successfully!");
+        alert("🚀 訂單已成功送出！確認信件已同步寄發至您的信箱。");
 
-        // 重新載入訂單清單
         loadOrders(user);
 
-        // 清空表單欄位
+        // 重置表單欄位
         document.getElementById("customerName").value = "";
         document.getElementById("message").value = "";
         document.getElementById("quantity").value = "1";
 
     }catch(error){
-        alert("Error: " + error.message);
+        alert("系統發生錯誤: " + error.message);
     }
 }
 
-// 監聽登入狀態
+// 監聽登入狀態改變
 onAuthStateChanged(auth,(user)=>{
     const userInfo = document.getElementById("userInfo");
     const logoutBtn = document.getElementById("logoutBtn");
+    const statusDot = document.getElementById("statusDot");
+    const authSection = document.getElementById("authSection");
 
     if(user){
-        userInfo.innerHTML = `Logged in as: ${user.email}`;
+        userInfo.innerHTML = `已登入會員：${user.email}`;
+        statusDot.classList.add("active");
         logoutBtn.classList.remove("hidden");
+        authSection.classList.add("hidden"); // 登入後自動隱藏註冊登入卡片
         loadOrders(user);
     }else{
-        userInfo.innerHTML = "Not Logged In";
+        userInfo.innerHTML = "訪客狀態（尚未登入）";
+        statusDot.classList.remove("active");
         logoutBtn.classList.add("hidden");
-        document.getElementById("ordersList").innerHTML = "Login to view your orders.";
+        authSection.classList.remove("hidden"); // 登出後再次顯示表單
+        document.getElementById("ordersList").innerHTML = "請先登入會員帳號，即可同步追蹤您在此處成立的個人歷程訂單。";
     }
 });
 
 </script>
-
 </body>
 </html>
