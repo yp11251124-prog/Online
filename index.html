@@ -58,6 +58,12 @@ border:1px solid #ccc;
 border-radius:8px;
 }
 
+/* 唯讀欄位稍微變灰 */
+input[readonly] {
+background-color: #e9ecef;
+cursor: not-allowed;
+}
+
 button{
 padding:10px 16px;
 border:none;
@@ -118,20 +124,20 @@ display:none;
 </head>
 <body>
 
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  
 <header>
 <h1>🛒 Firebase Online Store</h1>
-<p>Simple Full Stack Store with Firebase</p>
+<p>Simple Full Stack Store with Firebase & EmailJS</p>
 </header>
 
 <div class="container">
 
-<!-- User Info -->
 <div class="card">
 <div id="userInfo">Not Logged In</div>
 <button id="logoutBtn" class="hidden">Logout</button>
 </div>
 
-<!-- Products -->
 <div class="card">
 <h2>Products</h2>
 
@@ -158,89 +164,63 @@ display:none;
 </div>
 </div>
 
-<!-- Signup -->
 <div class="card">
 <h2>Signup</h2>
-
 <input type="email" id="signupEmail" placeholder="Email">
 <input type="password" id="signupPassword" placeholder="Password">
-
 <button onclick="signup()">Create Account</button>
 </div>
 
-<!-- Login -->
 <div class="card">
 <h2>Login</h2>
-
 <input type="email" id="loginEmail" placeholder="Email">
 <input type="password" id="loginPassword" placeholder="Password">
-
 <button onclick="login()">Login</button>
 </div>
 
-<!-- Order Form -->
 <div class="card">
 <h2>Place Order</h2>
 
-<input type="text" id="customerName" placeholder="Customer Name">
+<label>Customer Name:</label>
+<input type="text" id="customerName" placeholder="Your Name" required>
 
-<select id="productName">
-<option>Sports Shoes</option>
-<option>Smart Watch</option>
-<option>Smart Phone</option>
+<label>Select Product:</label>
+<select id="productName" onchange="updatePrice()">
+<option value="Sports Shoes">Sports Shoes ($80)</option>
+<option value="Smart Watch">Smart Watch ($120)</option>
+<option value="Smart Phone">Smart Phone ($500)</option>
 </select>
 
-<input type="number" id="quantity" placeholder="Quantity">
+<label>Quantity:</label>
+<input type="number" id="quantity" value="1" min="1">
 
-<input type="number" id="price" placeholder="Price">
+<label>Unit Price (USD):</label>
+<input type="number" id="price" value="80" readonly>
 
-<textarea id="message" placeholder="Message"></textarea>
+<label>Message:</label>
+<textarea id="message" placeholder="Leave a message..."></textarea>
 
 <button onclick="placeOrder()">Submit Order</button>
-
 </div>
 
-<!-- Order History -->
 <div class="card">
 <h2>My Order History</h2>
 <div id="ordersList">
-No Orders
+Login to view your orders.
 </div>
 </div>
 
 </div>
-
-<!-- Firebase -->
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import {
-getAuth,
-createUserWithEmailAndPassword,
-signInWithEmailAndPassword,
-signOut,
-onAuthStateChanged
-}
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-import {
-getFirestore,
-collection,
-addDoc,
-query,
-where,
-getDocs,
-orderBy
-}
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-
-// =====================================
-// Replace with your Firebase Config
-// =====================================
-
+// ========================================================
+// 1. 設定你的金鑰區域 (Firebase & EmailJS)
+// ========================================================
 const firebaseConfig = {
   apiKey: "AIzaSyD74VC9v4BFXG-tIjd-e3THLxf0VVosuOg",
   authDomain: "onlinestore-ed0c2.firebaseapp.com",
@@ -251,209 +231,183 @@ const firebaseConfig = {
   measurementId: "G-DG50QFEPC4"
 };
 
-// =====================================
+// 請在此處填入您的 EmailJS 金鑰
+const EMAILJS_PUBLIC_KEY = "YOUR_EMAILJS_PUBLIC_KEY"; 
+const EMAILJS_SERVICE_ID = "YOUR_EMAILJS_SERVICE_ID";
+const EMAILJS_TEMPLATE_ID = "YOUR_EMAILJS_TEMPLATE_ID";
 
+// 初始化 Firebase
 const app = initializeApp(firebaseConfig);
-
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// 初始化 EmailJS
+if(EMAILJS_PUBLIC_KEY !== "YOUR_EMAILJS_PUBLIC_KEY") {
+    emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+}
+
+// ========================================================
+// 2. 商業邏輯與自動化 UI 函數
+// ========================================================
+
+// 商品價格對照表
+const priceList = {
+    "Sports Shoes": 80,
+    "Smart Watch": 120,
+    "Smart Phone": 500
+};
+
+// 切換下拉選單時自動更換價格
+window.updatePrice = function() {
+    const product = document.getElementById("productName").value;
+    document.getElementById("price").value = priceList[product];
+}
+
+// 註冊功能
 window.signup = async function(){
-
-const email =
-document.getElementById("signupEmail").value;
-
-const password =
-document.getElementById("signupPassword").value;
-
-try{
-
-await createUserWithEmailAndPassword(
-auth,
-email,
-password
-);
-
-alert("Signup Success");
-
-}catch(error){
-
-alert(error.message);
-
+    const email = document.getElementById("signupEmail").value;
+    const password = document.getElementById("signupPassword").value;
+    try{
+        await createUserWithEmailAndPassword(auth, email, password);
+        alert("Signup Success");
+    }catch(error){
+        alert(error.message);
+    }
 }
 
-}
-
+// 登入功能
 window.login = async function(){
-
-const email =
-document.getElementById("loginEmail").value;
-
-const password =
-document.getElementById("loginPassword").value;
-
-try{
-
-await signInWithEmailAndPassword(
-auth,
-email,
-password
-);
-
-alert("Login Success");
-
-}catch(error){
-
-alert(error.message);
-
+    const email = document.getElementById("loginEmail").value;
+    const password = document.getElementById("signupPassword" ? document.getElementById("loginPassword").value : ""); // 安全檢查
+    try{
+        await signInWithEmailAndPassword(auth, email, document.getElementById("loginPassword").value);
+        alert("Login Success");
+    }catch(error){
+        alert(error.message);
+    }
 }
 
-}
-
-document
-.getElementById("logoutBtn")
-.addEventListener("click",async()=>{
-
-await signOut(auth);
-
+// 登出按鈕
+document.getElementById("logoutBtn").addEventListener("click", async()=>{
+    await signOut(auth);
 });
 
+// 載入歷史訂單
 async function loadOrders(user){
-
-const list =
-document.getElementById("ordersList");
-
-list.innerHTML = "Loading...";
-
-try{
-
-const q = query(
-collection(db,"orders"),
-where("userId","==",user.uid)
-);
-
-const snapshot = await getDocs(q);
-
-if(snapshot.empty){
-
-list.innerHTML = "No Orders Found";
-return;
-
+    const list = document.getElementById("ordersList");
+    list.innerHTML = "Loading...";
+    try{
+        const q = query(collection(db,"orders"), where("userId","==",user.uid));
+        const snapshot = await getDocs(q);
+        if(snapshot.empty){
+            list.innerHTML = "No Orders Found";
+            return;
+        }
+        let html = "";
+        snapshot.forEach(doc=>{
+            const data = doc.data();
+            html += `
+                <div class="order-item">
+                <b>${data.productName}</b><br>
+                Customer: ${data.customerName}<br>
+                Qty: ${data.quantity}<br>
+                Price: $${data.price} (Total: $${data.price * data.quantity})<br>
+                Message: ${data.message || 'None'}<br>
+                Date: ${new Date(data.orderDate).toLocaleString()}
+                </div>
+            `;
+        });
+        list.innerHTML = html;
+    }catch(error){
+        list.innerHTML = error.message;
+    }
 }
 
-let html = "";
-
-snapshot.forEach(doc=>{
-
-const data = doc.data();
-
-html += `
-<div class="order-item">
-<b>${data.productName}</b><br>
-Customer: ${data.customerName}<br>
-Qty: ${data.quantity}<br>
-Price: $${data.price}<br>
-Message: ${data.message}<br>
-Date: ${new Date(data.orderDate).toLocaleString()}
-</div>
-`;
-
-});
-
-list.innerHTML = html;
-
-}catch(error){
-
-list.innerHTML = error.message;
-
-}
-
-}
-
+// 送出訂單與發送 EmailJS 信件
 window.placeOrder = async function(){
+    const user = auth.currentUser;
+    if(!user){
+        alert("Please login first.");
+        return;
+    }
 
-const user = auth.currentUser;
+    const customerName = document.getElementById("customerName").value.trim();
+    const productName = document.getElementById("productName").value;
+    const quantity = parseInt(document.getElementById("quantity").value);
+    const price = Number(document.getElementById("price").value);
+    const message = document.getElementById("message").value;
 
-if(!user){
+    if(!customerName) {
+        alert("Please enter Customer Name.");
+        return;
+    }
 
-alert("Please login first.");
-return;
+    try{
+        const orderDateNow = Date.now();
+        
+        // 1. 存入 Firestore
+        await addDoc(collection(db,"orders"),{
+            userId: user.uid,
+            userEmail: user.email,
+            customerName,
+            productName,
+            quantity: Number(quantity),
+            price: Number(price),
+            message,
+            orderDate: orderDateNow
+        });
 
+        alert("Order Saved to Database!");
+
+        // 2. 觸發 EmailJS 發送郵件
+        if (EMAILJS_PUBLIC_KEY !== "YOUR_EMAILJS_PUBLIC_KEY") {
+            
+            // 準備傳送給 EmailJS 模板的參數
+            const templateParams = {
+                customerName: customerName,
+                productName: productName,
+                quantity: quantity,
+                totalPrice: price * quantity, // 計算總金額
+                message: message || "無",
+                orderDate: new Date(orderDateNow).toLocaleString(),
+                userEmail: user.email // 收件人填登入者的 Email 或是你自己的後台通知信箱
+            };
+
+            // 如果你想把信直接寄給目前登入的顧客，可以在這裡將 template 內建的 To Email 綁定此變數，
+            // 或者在後台設定固定寄給店長。
+            await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+            alert("Confirmation Email Sent successfully!");
+        } else {
+            console.log("EmailJS 尚未配置金鑰，跳過寄信步驟。");
+        }
+
+        // 重新載入訂單清單
+        loadOrders(user);
+
+        // 清空表單部分欄位
+        document.getElementById("customerName").value = "";
+        document.getElementById("message").value = "";
+        document.getElementById("quantity").value = "1";
+
+    }catch(error){
+        alert("Error: " + error.message);
+    }
 }
 
-const customerName =
-document.getElementById("customerName").value;
-
-const productName =
-document.getElementById("productName").value;
-
-const quantity =
-document.getElementById("quantity").value;
-
-const price =
-document.getElementById("price").value;
-
-const message =
-document.getElementById("message").value;
-
-try{
-
-await addDoc(collection(db,"orders"),{
-
-userId:user.uid,
-userEmail:user.email,
-
-customerName,
-productName,
-quantity:Number(quantity),
-price:Number(price),
-message,
-
-orderDate:Date.now()
-
-});
-
-alert("Order Submitted!");
-
-loadOrders(user);
-
-}catch(error){
-
-alert(error.message);
-
-}
-
-}
-
+// 監聽登入狀態
 onAuthStateChanged(auth,(user)=>{
+    const userInfo = document.getElementById("userInfo");
+    const logoutBtn = document.getElementById("logoutBtn");
 
-const userInfo =
-document.getElementById("userInfo");
-
-const logoutBtn =
-document.getElementById("logoutBtn");
-
-if(user){
-
-userInfo.innerHTML =
-`Logged in as: ${user.email}`;
-
-logoutBtn.classList.remove("hidden");
-
-loadOrders(user);
-
-}else{
-
-userInfo.innerHTML =
-"Not Logged In";
-
-logoutBtn.classList.add("hidden");
-
-document.getElementById("ordersList")
-.innerHTML = "Login to view your orders.";
-
-}
-
+    if(user){
+        userInfo.innerHTML = `Logged in as: ${user.email}`;
+        logoutBtn.classList.remove("hidden");
+        loadOrders(user);
+    }else{
+        userInfo.innerHTML = "Not Logged In";
+        logoutBtn.classList.add("hidden");
+        document.getElementById("ordersList").innerHTML = "Login to view your orders.";
+    }
 });
 
 </script>
